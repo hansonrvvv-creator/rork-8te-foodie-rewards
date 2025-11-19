@@ -1,15 +1,87 @@
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Search, MapPin } from 'lucide-react-native';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Search, MapPin, Navigation } from 'lucide-react-native';
 import { Stack, router } from 'expo-router';
+import * as Location from 'expo-location';
+import { useEffect, useState } from 'react';
 
 import Colors from '@/constants/colors';
 import { RESTAURANTS, Restaurant } from '@/mocks/restaurants';
-import { useState } from 'react';
+import { searchNearbyRestaurants } from '@/services/googlePlaces';
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [restaurants, setRestaurants] = useState<Restaurant[]>(RESTAURANTS);
+  const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  const filteredRestaurants = RESTAURANTS.filter(restaurant =>
+  useEffect(() => {
+    void checkLocationPermission();
+  }, []);
+
+  const checkLocationPermission = async () => {
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      setHasLocationPermission(status === 'granted');
+      
+      if (status === 'granted') {
+        await fetchNearbyRestaurants();
+      }
+    } catch (error) {
+      console.error('Error checking location permission:', error);
+    }
+  };
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setHasLocationPermission(status === 'granted');
+      
+      if (status === 'granted') {
+        await fetchNearbyRestaurants();
+      } else {
+        Alert.alert(
+          'Location Permission',
+          'Please enable location services to find restaurants near you.'
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+      Alert.alert('Error', 'Failed to request location permission');
+    }
+  };
+
+  const fetchNearbyRestaurants = async () => {
+    setIsLoadingLocation(true);
+    try {
+      console.log('Getting current location...');
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      
+      const { latitude, longitude } = location.coords;
+      console.log('User location:', latitude, longitude);
+      setUserLocation({ latitude, longitude });
+      
+      const nearbyRestaurants = await searchNearbyRestaurants(latitude, longitude);
+      
+      if (nearbyRestaurants.length > 0) {
+        setRestaurants(nearbyRestaurants);
+      } else {
+        console.log('No nearby restaurants found, using mock data');
+      }
+    } catch (error) {
+      console.error('Error fetching nearby restaurants:', error);
+      Alert.alert(
+        'Location Error',
+        'Could not get your location. Using default restaurants.'
+      );
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const filteredRestaurants = restaurants.filter(restaurant =>
     restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -84,6 +156,23 @@ export default function ExploreScreen() {
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
+            {!hasLocationPermission ? (
+              <TouchableOpacity
+                onPress={requestLocationPermission}
+                style={styles.locationButton}
+              >
+                <Navigation size={20} color={Colors.light.primary} />
+              </TouchableOpacity>
+            ) : isLoadingLocation ? (
+              <ActivityIndicator size="small" color={Colors.light.primary} />
+            ) : (
+              <TouchableOpacity
+                onPress={fetchNearbyRestaurants}
+                style={styles.locationButton}
+              >
+                <Navigation size={20} color={Colors.light.primary} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -91,9 +180,27 @@ export default function ExploreScreen() {
           style={styles.scrollView}
           contentContainerStyle={styles.content}
         >
-          <Text style={styles.sectionTitle}>
-            {searchQuery ? 'Search Results' : 'Near You'}
-          </Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.sectionTitle}>
+              {searchQuery ? 'Search Results' : hasLocationPermission ? 'Near You' : 'Restaurants'}
+            </Text>
+            {hasLocationPermission && userLocation && (
+              <Text style={styles.locationText}>
+                📍 Using your location
+              </Text>
+            )}
+          </View>
+          {!hasLocationPermission && (
+            <TouchableOpacity
+              style={styles.permissionBanner}
+              onPress={requestLocationPermission}
+            >
+              <Navigation size={20} color={Colors.light.primary} />
+              <Text style={styles.permissionText}>
+                Enable location to find restaurants near you
+              </Text>
+            </TouchableOpacity>
+          )}
           {filteredRestaurants.map(renderRestaurant)}
         </ScrollView>
       </View>
@@ -125,6 +232,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: Colors.light.text,
+    outlineStyle: Platform.OS === 'web' ? 'none' : undefined,
+  } as const,
+  locationButton: {
+    padding: 4,
   },
   scrollView: {
     flex: 1,
@@ -133,11 +244,37 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 8,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '700',
     color: Colors.light.text,
+  },
+  locationText: {
+    fontSize: 12,
+    color: Colors.light.textSecondary,
+  },
+  permissionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.light.backgroundSecondary,
+    padding: 16,
+    borderRadius: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+  },
+  permissionText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
   },
   restaurantCard: {
     backgroundColor: Colors.light.card,
