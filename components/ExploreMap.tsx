@@ -4,6 +4,19 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import Colors from '@/constants/colors';
 import { Restaurant } from '@/mocks/restaurants';
 
+let MapView: any;
+let Marker: any;
+let PROVIDER_DEFAULT: any;
+let PROVIDER_GOOGLE: any;
+
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+  PROVIDER_DEFAULT = maps.PROVIDER_DEFAULT;
+  PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+}
+
 interface ExploreMapProps {
   restaurants: Restaurant[];
   userLocation: { latitude: number; longitude: number } | null;
@@ -22,11 +35,6 @@ function WebMapFallback() {
 }
 
 function NativeMap({ restaurants, userLocation, onRestaurantPress }: ExploreMapProps) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const MapView = require('react-native-maps').default;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } = require('react-native-maps');
-
   console.log('Rendering ExploreMap with restaurants count:', restaurants.length);
 
   const initialRegion = useMemo(() => {
