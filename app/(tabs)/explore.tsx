@@ -52,32 +52,36 @@ export default function ExploreScreen() {
     }
   }, []);
 
-  const checkLocationPermission = useCallback(async () => {
-    try {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      setHasLocationPermission(status === 'granted');
-      
-      if (status === 'granted') {
-        await fetchNearbyRestaurants();
-      }
-    } catch (error) {
-      console.error('Error checking location permission:', error);
-    }
-  }, [fetchNearbyRestaurants]);
+
 
   const requestLocationPermission = useCallback(async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setHasLocationPermission(status === 'granted');
-      
-      if (status === 'granted') {
-        await fetchNearbyRestaurants();
-      } else {
-        Alert.alert(
-          'Location Permission',
-          'Please enable location services to find restaurants near you.'
-        );
-      }
+      Alert.alert(
+        '📍 Location Access',
+        'We need your location to:\n\n• Find nearby restaurants\n• Enable check-ins when you visit\n• Earn rewards based on where you dine\n\nYour location is only used when you\'re using the app.',
+        [
+          {
+            text: 'Not Now',
+            style: 'cancel',
+          },
+          {
+            text: 'Allow',
+            onPress: async () => {
+              const { status } = await Location.requestForegroundPermissionsAsync();
+              setHasLocationPermission(status === 'granted');
+              
+              if (status === 'granted') {
+                await fetchNearbyRestaurants();
+              } else {
+                Alert.alert(
+                  'Location Permission Denied',
+                  'You can enable location access later in your device settings to unlock all features.'
+                );
+              }
+            },
+          },
+        ]
+      );
     } catch (error) {
       console.error('Error requesting location permission:', error);
       Alert.alert('Error', 'Failed to request location permission');
@@ -85,8 +89,21 @@ export default function ExploreScreen() {
   }, [fetchNearbyRestaurants]);
 
   useEffect(() => {
-    void checkLocationPermission();
-  }, [checkLocationPermission]);
+    const checkAndRequest = async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      setHasLocationPermission(status === 'granted');
+      
+      if (status === 'granted') {
+        await fetchNearbyRestaurants();
+      } else if (status === 'undetermined') {
+        setTimeout(() => {
+          requestLocationPermission();
+        }, 500);
+      }
+    };
+    
+    void checkAndRequest();
+  }, [fetchNearbyRestaurants, requestLocationPermission]);
 
   const filteredRestaurants = useMemo(
     () =>
@@ -226,10 +243,17 @@ export default function ExploreScreen() {
                 style={styles.permissionBanner}
                 onPress={requestLocationPermission}
               >
-                <Navigation size={20} color={Colors.light.primary} />
-                <Text style={styles.permissionText}>
-                  Enable location to find restaurants near you
-                </Text>
+                <View style={styles.permissionIconContainer}>
+                  <Navigation size={24} color={Colors.light.primary} />
+                </View>
+                <View style={styles.permissionTextContainer}>
+                  <Text style={styles.permissionTitle}>
+                    Enable Location Access
+                  </Text>
+                  <Text style={styles.permissionSubtitle}>
+                    Find nearby restaurants and check in to earn rewards
+                  </Text>
+                </View>
               </TouchableOpacity>
             )}
             {filteredRestaurants.map(renderRestaurant)}
@@ -325,6 +349,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: Colors.light.primary,
+  },
+  permissionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.light.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  permissionTextContainer: {
+    flex: 1,
+  },
+  permissionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  permissionSubtitle: {
+    fontSize: 13,
+    color: Colors.light.textSecondary,
   },
   permissionText: {
     flex: 1,

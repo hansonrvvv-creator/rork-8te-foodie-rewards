@@ -19,9 +19,26 @@ export default function ScanScreen() {
   const { addCheckIn } = useCheckIns();
 
   useEffect(() => {
-    if (locationPermission?.granted === false) {
-      requestLocationPermission();
-    }
+    const checkAndRequestLocation = async () => {
+      if (locationPermission?.status === 'undetermined') {
+        Alert.alert(
+          '📍 Location Access Required',
+          'We need your location to verify you\'re at the restaurant when checking in. This helps prevent fraud and ensures you earn legitimate rewards.',
+          [
+            {
+              text: 'Not Now',
+              style: 'cancel',
+            },
+            {
+              text: 'Allow',
+              onPress: requestLocationPermission,
+            },
+          ]
+        );
+      }
+    };
+    
+    void checkAndRequestLocation();
   }, [locationPermission, requestLocationPermission]);
 
   if (!permission) {
@@ -91,8 +108,18 @@ export default function ScanScreen() {
 
       if (!locationPermission?.granted) {
         Alert.alert(
-          'Location Required',
-          'Location permission is required to verify check-in at the restaurant.'
+          '📍 Location Required',
+          'We need your location to verify you\'re actually at the restaurant. This ensures fair rewards for everyone.\n\nPlease enable location access in your device settings.',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Open Settings',
+              onPress: requestLocationPermission,
+            },
+          ]
         );
         setScanned(false);
         setVerifyingLocation(false);
