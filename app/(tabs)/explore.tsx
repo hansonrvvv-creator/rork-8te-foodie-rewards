@@ -1,7 +1,8 @@
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Search, MapPin, Navigation, Map as MapIcon, List as ListIcon } from 'lucide-react-native';
+import { Search, MapPin, Navigation, Map as MapIcon, List as ListIcon, ExternalLink } from 'lucide-react-native';
 import { Stack, router } from 'expo-router';
 import * as Location from 'expo-location';
+import * as Linking from 'expo-linking';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -97,6 +98,15 @@ export default function ExploreScreen() {
       Alert.alert('Error', 'Failed to request location permission');
     }
   }, [fetchNearbyRestaurants]);
+
+  const openInGoogleMaps = useCallback(() => {
+    const query = searchQuery || 'restaurants';
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    Linking.openURL(url).catch((err) => {
+      console.error('Failed to open Google Maps:', err);
+      Alert.alert('Error', 'Could not open Google Maps');
+    });
+  }, [searchQuery]);
 
   useEffect(() => {
     const checkAndRequest = async () => {
@@ -269,6 +279,16 @@ export default function ExploreScreen() {
               </TouchableOpacity>
             )}
             {filteredRestaurants.map(renderRestaurant)}
+            
+            <TouchableOpacity 
+              style={styles.googleMapsButton}
+              onPress={openInGoogleMaps}
+            >
+              <ExternalLink size={20} color={Colors.light.primary} />
+              <Text style={styles.googleMapsButtonText}>
+                Find more on Google Maps
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
         ) : (
           <View style={{ flex: 1 }}>
@@ -503,6 +523,22 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
     zIndex: 100,
+  },
+  googleMapsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 16,
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 32,
+  },
+  googleMapsButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.primary,
   },
   webMapContainer: {
     flex: 1,
