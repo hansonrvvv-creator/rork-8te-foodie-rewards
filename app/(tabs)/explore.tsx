@@ -8,12 +8,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
 import ExploreMap from '@/components/ExploreMap';
-import { RESTAURANTS, Restaurant } from '@/mocks/restaurants';
+import { Restaurant } from '@/mocks/restaurants';
 import { searchNearbyRestaurants } from '@/services/googlePlaces';
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [restaurants, setRestaurants] = useState<Restaurant[]>(RESTAURANTS);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -44,12 +44,14 @@ export default function ExploreScreen() {
       
       const nearbyRestaurants = await searchNearbyRestaurants(latitude, longitude, 5000, keyword);
       
-      if (nearbyRestaurants.length > 0) {
-        setRestaurants(nearbyRestaurants);
-      } else {
-        console.log('No nearby restaurants found, using mock data');
+      setRestaurants(nearbyRestaurants);
+      
+      if (nearbyRestaurants.length === 0) {
+        console.log('No nearby restaurants found');
         if (keyword) {
-           Alert.alert('No Results', `No restaurants found for "${keyword}" nearby.`);
+          Alert.alert('No Results', `No restaurants found for "${keyword}" nearby.`);
+        } else {
+          Alert.alert('No Results', 'No restaurants found in your area. Try expanding your search.');
         }
       }
     } catch (error) {
@@ -236,11 +238,11 @@ export default function ExploreScreen() {
             <View style={styles.headerRow}>
               <View>
                 <Text style={styles.sectionTitle}>
-                  {searchQuery ? 'Search Results' : hasLocationPermission ? 'Near You' : 'Restaurants'}
+                  {searchQuery ? 'Search Results' : 'Restaurants Near You'}
                 </Text>
-                {hasLocationPermission && userLocation && (
+                {userLocation && (
                   <Text style={styles.locationText}>
-                    📍 Using your location
+                    📍 Showing Google restaurants in your area
                   </Text>
                 )}
               </View>
@@ -273,12 +275,21 @@ export default function ExploreScreen() {
                     Enable Location Access
                   </Text>
                   <Text style={styles.permissionSubtitle}>
-                    Find nearby restaurants and check in to earn rewards
+                    Find Google restaurants nearby and check in to earn rewards
                   </Text>
                 </View>
               </TouchableOpacity>
             )}
-            {filteredRestaurants.map(renderRestaurant)}
+            {filteredRestaurants.length === 0 && hasLocationPermission && !isLoadingLocation ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>No restaurants found</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  Try adjusting your search or refreshing your location
+                </Text>
+              </View>
+            ) : (
+              filteredRestaurants.map(renderRestaurant)
+            )}
             
             <TouchableOpacity 
               style={styles.googleMapsButton}
@@ -555,6 +566,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   webMapSubtext: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
     fontSize: 14,
     color: Colors.light.textSecondary,
     textAlign: 'center',
