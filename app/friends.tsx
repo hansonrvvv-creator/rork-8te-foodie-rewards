@@ -30,7 +30,7 @@ export default function FriendsScreen() {
   const [suggestedFriends, setSuggestedFriends] = useState<FacebookFriend[]>([]);
 
   const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'expo-app',
+    scheme: 'rork-app',
     path: 'friends',
   });
 
