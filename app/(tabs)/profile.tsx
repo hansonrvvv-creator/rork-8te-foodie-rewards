@@ -1,9 +1,9 @@
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
-import { MapPin, Star, Gift, Trophy, ChevronRight, TrendingUp, UserPlus } from 'lucide-react-native';
+import { MapPin, Star, Gift, Trophy, ChevronRight, TrendingUp, UserPlus, Edit3 } from 'lucide-react-native';
 
-import { CURRENT_USER } from '@/mocks/user';
+import { useUser } from '@/contexts/UserContext';
 import { getTierByPoints, getNextTier } from '@/mocks/tiers';
 
 const AVAILABLE_REWARDS = [
@@ -18,10 +18,11 @@ const ACTIVE_OFFERS = [
 ];
 
 export default function ProfileScreen() {
-  const currentTier = getTierByPoints(CURRENT_USER.points);
+  const { user } = useUser();
+  const currentTier = getTierByPoints(user.points);
   const nextTier = getNextTier(currentTier.id);
   const progress = nextTier
-    ? ((CURRENT_USER.points - currentTier.minPoints) / (nextTier.minPoints - currentTier.minPoints)) * 100
+    ? ((user.points - currentTier.minPoints) / (nextTier.minPoints - currentTier.minPoints)) * 100
     : 100;
 
   return (
@@ -33,6 +34,11 @@ export default function ProfileScreen() {
             backgroundColor: '#000000',
           },
           headerTintColor: '#FFD700',
+          headerRight: () => (
+            <TouchableOpacity onPress={() => router.push('/edit-profile')}>
+              <Edit3 size={24} color="#FFD700" />
+            </TouchableOpacity>
+          ),
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -44,10 +50,13 @@ export default function ProfileScreen() {
           />
           
           <View style={styles.userInfo}>
-            {CURRENT_USER.avatar && CURRENT_USER.avatar.length > 0 && (
-              <Image source={{ uri: CURRENT_USER.avatar }} style={styles.avatar} />
+            {user.avatar && user.avatar.length > 0 && (
+              <Image source={{ uri: user.avatar }} style={styles.avatar} />
             )}
-            <Text style={styles.name}>{CURRENT_USER.name}</Text>
+            <Text style={styles.name}>{user.name || 'Guest User'}</Text>
+            {user.email && user.email.length > 0 && (
+              <Text style={styles.email}>{user.email}</Text>
+            )}
             <TouchableOpacity style={styles.addFriendsButton}>
               <UserPlus size={18} color="#FFFFFF" />
               <Text style={styles.addFriendsText}>Add Friends</Text>
@@ -69,7 +78,7 @@ export default function ProfileScreen() {
                 <Text style={styles.tierEmoji}>{currentTier.icon}</Text>
                 <View style={styles.tierInfo}>
                   <Text style={styles.tierName}>{currentTier.name}</Text>
-                  <Text style={styles.tierPoints}>{CURRENT_USER.points} points</Text>
+                  <Text style={styles.tierPoints}>{user.points} points</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -79,7 +88,7 @@ export default function ProfileScreen() {
             <View style={styles.progressContainer}>
               <View style={styles.progressHeader}>
                 <Text style={styles.progressLabel}>
-                  {nextTier.minPoints - CURRENT_USER.points} pts to {nextTier.name}
+                  {nextTier.minPoints - user.points} pts to {nextTier.name}
                 </Text>
                 <Text style={styles.progressPercent}>{Math.round(progress)}%</Text>
               </View>
@@ -93,19 +102,19 @@ export default function ProfileScreen() {
         <View style={styles.quickStats}>
           <View style={styles.quickStatItem}>
             <MapPin size={20} color="#FFD700" />
-            <Text style={styles.quickStatValue}>{CURRENT_USER.totalCheckins}</Text>
+            <Text style={styles.quickStatValue}>{user.totalCheckins}</Text>
             <Text style={styles.quickStatLabel}>Check-ins</Text>
           </View>
           <View style={styles.quickStatDivider} />
           <View style={styles.quickStatItem}>
             <Star size={20} color="#FFD700" />
-            <Text style={styles.quickStatValue}>{CURRENT_USER.totalReviews}</Text>
+            <Text style={styles.quickStatValue}>{user.totalReviews}</Text>
             <Text style={styles.quickStatLabel}>Reviews</Text>
           </View>
           <View style={styles.quickStatDivider} />
           <View style={styles.quickStatItem}>
             <TrendingUp size={20} color="#FFD700" />
-            <Text style={styles.quickStatValue}>{CURRENT_USER.points}</Text>
+            <Text style={styles.quickStatValue}>{user.points}</Text>
             <Text style={styles.quickStatLabel}>Points</Text>
           </View>
         </View>
@@ -210,6 +219,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 14,
+    color: '#999',
     marginBottom: 12,
   },
   addFriendsButton: {

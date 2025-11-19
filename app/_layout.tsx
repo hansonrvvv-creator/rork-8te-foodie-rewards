@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { CheckInProvider } from "@/contexts/CheckInContext";
+import { UserProvider } from "@/contexts/UserContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -16,6 +17,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="restaurant" options={{ headerShown: false }} />
       <Stack.Screen name="all-tiers" options={{ headerShown: true }} />
+      <Stack.Screen name="edit-profile" options={{ headerShown: true }} />
       <Stack.Screen
         name="checkin-success"
         options={{ headerShown: false, presentation: "modal" }}
@@ -31,11 +33,13 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CheckInProvider>
-        <GestureHandlerRootView>
-          <RootLayoutNav />
-        </GestureHandlerRootView>
-      </CheckInProvider>
+      <UserProvider>
+        <CheckInProvider>
+          <GestureHandlerRootView>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
+        </CheckInProvider>
+      </UserProvider>
     </QueryClientProvider>
   );
 }

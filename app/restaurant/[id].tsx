@@ -9,6 +9,7 @@ import { RESTAURANTS } from '@/mocks/restaurants';
 import { getRestaurantReviews, Review, PostVisibility } from '@/mocks/posts';
 import { TIERS } from '@/mocks/tiers';
 import { useCheckIns } from '@/contexts/CheckInContext';
+import { useUser } from '@/contexts/UserContext';
 import ReviewModal from '@/components/ReviewModal';
 
 export default function RestaurantDetailScreen() {
@@ -16,6 +17,7 @@ export default function RestaurantDetailScreen() {
   const restaurant = RESTAURANTS.find(r => r.id === id);
   const reviews = getRestaurantReviews(id as string);
   const { hasActiveCheckIn } = useCheckIns();
+  const { addReview } = useUser();
   const [reviewModalVisible, setReviewModalVisible] = useState<boolean>(false);
 
   const canWriteReview = hasActiveCheckIn(id as string);
@@ -34,6 +36,8 @@ export default function RestaurantDetailScreen() {
 
   const handleSubmitReview = async (rating: number, reviewText: string, visibility: PostVisibility) => {
     console.log('Submitting review:', { rating, reviewText, visibility, restaurantId: id });
+    
+    await addReview();
     
     const visibilityText = visibility === 'private' 
       ? 'Only you can see this review.' 
