@@ -1,11 +1,12 @@
-import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Search, MapPin, Navigation, Map as MapIcon, List as ListIcon } from 'lucide-react-native';
 import { Stack, router } from 'expo-router';
 import * as Location from 'expo-location';
-import { useEffect, useState, useRef } from 'react';
-import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/colors';
+import ExploreMap from '@/components/ExploreMap';
 import { RESTAURANTS, Restaurant } from '@/mocks/restaurants';
 import { searchNearbyRestaurants } from '@/services/googlePlaces';
 
@@ -16,45 +17,12 @@ export default function ExploreScreen() {
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const mapRef = useRef<MapView>(null);
 
-  useEffect(() => {
-    void checkLocationPermission();
-  }, []);
+  const insets = useSafeAreaInsets();
 
-  const checkLocationPermission = async () => {
-    try {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      setHasLocationPermission(status === 'granted');
-      
-      if (status === 'granted') {
-        await fetchNearbyRestaurants();
-      }
-    } catch (error) {
-      console.error('Error checking location permission:', error);
-    }
-  };
+  const containerStyle = useMemo(() => [styles.container, { paddingTop: insets.top }], [insets.top]);
 
-  const requestLocationPermission = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setHasLocationPermission(status === 'granted');
-      
-      if (status === 'granted') {
-        await fetchNearbyRestaurants();
-      } else {
-        Alert.alert(
-          'Location Permission',
-          'Please enable location services to find restaurants near you.'
-        );
-      }
-    } catch (error) {
-      console.error('Error requesting location permission:', error);
-      Alert.alert('Error', 'Failed to request location permission');
-    }
-  };
-
-  const fetchNearbyRestaurants = async () => {
+  const fetchNearbyRestaurants = useCallback(async () => {
     setIsLoadingLocation(true);
     try {
       console.log('Getting current location...');
@@ -82,61 +50,54 @@ export default function ExploreScreen() {
     } finally {
       setIsLoadingLocation(false);
     }
-  };
+  }, []);
 
-  const filteredRestaurants = restaurants.filter(restaurant =>
-    restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase())
+  const checkLocationPermission = useCallback(async () => {
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      setHasLocationPermission(status === 'granted');
+      
+      if (status === 'granted') {
+        await fetchNearbyRestaurants();
+      }
+    } catch (error) {
+      console.error('Error checking location permission:', error);
+    }
+  }, [fetchNearbyRestaurants]);
+
+  const requestLocationPermission = useCallback(async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setHasLocationPermission(status === 'granted');
+      
+      if (status === 'granted') {
+        await fetchNearbyRestaurants();
+      } else {
+        Alert.alert(
+          'Location Permission',
+          'Please enable location services to find restaurants near you.'
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+      Alert.alert('Error', 'Failed to request location permission');
+    }
+  }, [fetchNearbyRestaurants]);
+
+  useEffect(() => {
+    void checkLocationPermission();
+  }, [checkLocationPermission]);
+
+  const filteredRestaurants = useMemo(
+    () =>
+      restaurants.filter(
+        (restaurant) =>
+          restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [restaurants, searchQuery]
   );
 
-  const renderMap = () => {
-    if (Platform.OS === 'web') {
-      return (
-        <View style={styles.webMapContainer}>
-          <Text style={styles.webMapText}>Map view is optimized for mobile app.</Text>
-          <Text style={styles.webMapSubtext}>Please use the mobile app to view the interactive map.</Text>
-        </View>
-      );
-    }
-
-    const initialRegion = userLocation ? {
-      latitude: userLocation.latitude,
-      longitude: userLocation.longitude,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    } : {
-      latitude: 37.78825,
-      longitude: -122.4324,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    };
-
-    return (
-      <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
-          initialRegion={initialRegion}
-          showsUserLocation={true}
-          showsMyLocationButton={true}
-        >
-          {filteredRestaurants.map((restaurant) => (
-            <Marker
-              key={restaurant.id}
-              coordinate={{
-                latitude: restaurant.latitude,
-                longitude: restaurant.longitude,
-              }}
-              title={restaurant.name}
-              description={restaurant.cuisine}
-              onCalloutPress={() => router.push(`/restaurant/${restaurant.id}`)}
-            />
-          ))}
-        </MapView>
-      </View>
-    );
-  };
 
   const renderRestaurant = (restaurant: Restaurant) => {
     const filledStars = Math.floor(restaurant.rating);
@@ -197,7 +158,7 @@ export default function ExploreScreen() {
           },
         }}
       />
-      <View style={styles.container}>
+      <View style={containerStyle}>
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
             <Search size={20} color={Colors.light.textSecondary} />
@@ -291,7 +252,11 @@ export default function ExploreScreen() {
                   </TouchableOpacity>
                 </View>
              </View>
-             {renderMap()}
+             <ExploreMap
+               restaurants={filteredRestaurants}
+               userLocation={userLocation}
+               onRestaurantPress={(id: string) => router.push(`/restaurant/${id}`)}
+             />
           </View>
         )}
       </View>
