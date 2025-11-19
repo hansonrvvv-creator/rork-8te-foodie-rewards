@@ -16,6 +16,7 @@ export default function ScanScreen() {
   const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
   const [scanned, setScanned] = useState<boolean>(false);
   const [verifyingLocation, setVerifyingLocation] = useState<boolean>(false);
+  const [cooldown, setCooldown] = useState<boolean>(false);
   const { addCheckIn } = useCheckIns();
 
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function ScanScreen() {
   };
 
   const handleBarCodeScanned = async ({ data }: { type: string; data: string }) => {
-    if (scanned || verifyingLocation) return;
+    if (scanned || verifyingLocation || cooldown) return;
     
     setScanned(true);
     setVerifyingLocation(true);
@@ -101,8 +102,12 @@ export default function ScanScreen() {
 
       if (!restaurant) {
         Alert.alert('Invalid QR Code', 'This QR code is not valid for any restaurant.');
-        setScanned(false);
-        setVerifyingLocation(false);
+        setCooldown(true);
+        setTimeout(() => {
+          setCooldown(false);
+          setScanned(false);
+          setVerifyingLocation(false);
+        }, 2000);
         return;
       }
 
@@ -121,8 +126,12 @@ export default function ScanScreen() {
             },
           ]
         );
-        setScanned(false);
-        setVerifyingLocation(false);
+        setCooldown(true);
+        setTimeout(() => {
+          setCooldown(false);
+          setScanned(false);
+          setVerifyingLocation(false);
+        }, 2000);
         return;
       }
 
@@ -163,14 +172,22 @@ export default function ScanScreen() {
           'Too Far Away',
           `You must be within ${PROXIMITY_THRESHOLD_METERS}m of the restaurant to check in. You are ${Math.round(distance)}m away.`
         );
-        setScanned(false);
-        setVerifyingLocation(false);
+        setCooldown(true);
+        setTimeout(() => {
+          setCooldown(false);
+          setScanned(false);
+          setVerifyingLocation(false);
+        }, 2000);
       }
     } catch (error) {
       console.error('Check-in error:', error);
       Alert.alert('Check-in Failed', 'Failed to verify location. Please try again.');
-      setScanned(false);
-      setVerifyingLocation(false);
+      setCooldown(true);
+      setTimeout(() => {
+        setCooldown(false);
+        setScanned(false);
+        setVerifyingLocation(false);
+      }, 2000);
     }
   };
 
@@ -182,7 +199,7 @@ export default function ScanScreen() {
         <CameraView
           style={styles.camera}
           facing="back"
-          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          onBarcodeScanned={scanned || cooldown ? undefined : handleBarCodeScanned}
         >
           <View style={styles.overlay}>
             <View style={styles.topOverlay}>
