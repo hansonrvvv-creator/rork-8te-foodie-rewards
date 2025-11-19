@@ -1,14 +1,28 @@
-import { StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Platform, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Location from 'expo-location';
 import { Stack, router } from 'expo-router';
 import { X } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Colors from '@/constants/colors';
+import { useCheckIns } from '@/contexts/CheckInContext';
+import { RESTAURANTS } from '@/mocks/restaurants';
+
+const PROXIMITY_THRESHOLD_METERS = 200;
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
+  const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
   const [scanned, setScanned] = useState<boolean>(false);
+  const [verifyingLocation, setVerifyingLocation] = useState<boolean>(false);
+  const { addCheckIn } = useCheckIns();
+
+  useEffect(() => {
+    if (locationPermission?.granted === false) {
+      requestLocationPermission();
+    }
+  }, [locationPermission, requestLocationPermission]);
 
   if (!permission) {
     return <View style={styles.container} />;
@@ -37,15 +51,100 @@ export default function ScanScreen() {
     );
   }
 
-  const handleBarCodeScanned = ({ data }: { type: string; data: string }) => {
-    if (scanned) return;
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371e3;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  };
+
+  const handleBarCodeScanned = async ({ data }: { type: string; data: string }) => {
+    if (scanned || verifyingLocation) return;
     
     setScanned(true);
+    setVerifyingLocation(true);
     console.log('QR Code scanned:', data);
-    
-    setTimeout(() => {
-      router.push('/checkin-success');
-    }, 500);
+
+    try {
+      const restaurantId = data;
+      const restaurant = RESTAURANTS.find((r) => r.id === restaurantId);
+
+      if (!restaurant) {
+        Alert.alert('Invalid QR Code', 'This QR code is not valid for any restaurant.');
+        setScanned(false);
+        setVerifyingLocation(false);
+        return;
+      }
+
+      if (!locationPermission?.granted) {
+        Alert.alert(
+          'Location Required',
+          'Location permission is required to verify check-in at the restaurant.'
+        );
+        setScanned(false);
+        setVerifyingLocation(false);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const restaurantLat = restaurant.latitude;
+      const restaurantLon = restaurant.longitude;
+
+      const distance = calculateDistance(
+        location.coords.latitude,
+        location.coords.longitude,
+        restaurantLat,
+        restaurantLon
+      );
+
+      console.log('Distance to restaurant:', distance, 'meters');
+
+      if (Platform.OS === 'web' || distance <= PROXIMITY_THRESHOLD_METERS) {
+        await addCheckIn({
+          restaurantId,
+          timestamp: Date.now(),
+          location: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          },
+        });
+
+        setTimeout(() => {
+          router.push({
+            pathname: '/checkin-success',
+            params: { restaurantId },
+          });
+        }, 500);
+      } else {
+        Alert.alert(
+          'Too Far Away',
+          `You must be within ${PROXIMITY_THRESHOLD_METERS}m of the restaurant to check in. You are ${Math.round(distance)}m away.`
+        );
+        setScanned(false);
+        setVerifyingLocation(false);
+      }
+    } catch (error) {
+      console.error('Check-in error:', error);
+      Alert.alert('Check-in Failed', 'Failed to verify location. Please try again.');
+      setScanned(false);
+      setVerifyingLocation(false);
+    }
   };
 
   return (

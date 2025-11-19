@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { CheckCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -7,7 +7,8 @@ import Colors from '@/constants/colors';
 import { RESTAURANTS } from '@/mocks/restaurants';
 
 export default function CheckinSuccessScreen() {
-  const restaurant = RESTAURANTS[0];
+  const { restaurantId } = useLocalSearchParams();
+  const restaurant = RESTAURANTS.find((r) => r.id === restaurantId) || RESTAURANTS[0];
   const pointsEarned = 25;
 
   return (

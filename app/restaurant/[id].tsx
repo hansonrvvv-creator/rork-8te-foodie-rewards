@@ -1,17 +1,41 @@
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { MapPin, Star, DollarSign, Heart, Share2, Phone, Navigation } from 'lucide-react-native';
+import { MapPin, Star, DollarSign, Heart, Share2, Phone, Navigation, Lock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 
 import Colors from '@/constants/colors';
 import { RESTAURANTS } from '@/mocks/restaurants';
 import { getRestaurantReviews, Review } from '@/mocks/posts';
 import { TIERS } from '@/mocks/tiers';
+import { useCheckIns } from '@/contexts/CheckInContext';
+import ReviewModal from '@/components/ReviewModal';
 
 export default function RestaurantDetailScreen() {
   const { id } = useLocalSearchParams();
   const restaurant = RESTAURANTS.find(r => r.id === id);
   const reviews = getRestaurantReviews(id as string);
+  const { hasActiveCheckIn } = useCheckIns();
+  const [reviewModalVisible, setReviewModalVisible] = useState<boolean>(false);
+
+  const canWriteReview = hasActiveCheckIn(id as string);
+
+  const handleWriteReviewPress = () => {
+    if (!canWriteReview) {
+      Alert.alert(
+        'Check-in Required',
+        'You must scan the QR code at this restaurant before writing a review.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    setReviewModalVisible(true);
+  };
+
+  const handleSubmitReview = async (rating: number, reviewText: string) => {
+    console.log('Submitting review:', { rating, reviewText, restaurantId: id });
+    Alert.alert('Review Submitted', 'Thank you for your review!');
+  };
 
   if (!restaurant) {
     return (
@@ -127,7 +151,14 @@ export default function RestaurantDetailScreen() {
           </View>
 
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.primaryButton}>
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                !canWriteReview && styles.primaryButtonDisabled,
+              ]}
+              onPress={handleWriteReviewPress}
+            >
+              {!canWriteReview && <Lock size={18} color="#FFFFFF" style={styles.lockIcon} />}
               <Star size={20} color="#FFFFFF" />
               <Text style={styles.primaryButtonText}>Write Review</Text>
             </TouchableOpacity>
@@ -160,6 +191,13 @@ export default function RestaurantDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      <ReviewModal
+        visible={reviewModalVisible}
+        restaurantName={restaurant.name}
+        onClose={() => setReviewModalVisible(false)}
+        onSubmit={handleSubmitReview}
+      />
     </>
   );
 }
@@ -264,6 +302,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },
+  lockIcon: {
+    marginRight: 4,
   },
   primaryButtonText: {
     fontSize: 16,
