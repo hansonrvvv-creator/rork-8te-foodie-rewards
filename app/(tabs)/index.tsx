@@ -2,14 +2,37 @@ import { Alert, Image, Linking, Platform, ScrollView, StyleSheet, Text, Touchabl
 import { Heart, MessageCircle, MapPin, Share2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
+import { useEffect, useState } from 'react';
 
 import Colors from '@/constants/colors';
 import { Post, getVisiblePosts } from '@/mocks/posts';
 import { TIERS } from '@/mocks/tiers';
-import { CURRENT_USER } from '@/mocks/user';
+import { useUser } from '@/contexts/UserContext';
 
 export default function FeedScreen() {
-  const visiblePosts = getVisiblePosts(CURRENT_USER.id, CURRENT_USER.friendIds);
+  const { user, isLoaded } = useUser();
+  const [hasShownWelcome, setHasShownWelcome] = useState(false);
+  const visiblePosts = getVisiblePosts(user.id, user.friendIds);
+
+  useEffect(() => {
+    if (isLoaded && !hasShownWelcome && (!user.name || !user.email)) {
+      setHasShownWelcome(true);
+      Alert.alert(
+        'Welcome to 8te! 🍽️',
+        'Complete your profile to start earning rewards and connecting with other foodies.',
+        [
+          {
+            text: 'Later',
+            style: 'cancel',
+          },
+          {
+            text: 'Complete Profile',
+            onPress: () => router.push('/edit-profile'),
+          },
+        ]
+      );
+    }
+  }, [isLoaded, user.name, user.email, hasShownWelcome]);
 
   const handleShareToFacebook = async (post: Post) => {
     const message = `Check out my review of ${post.restaurantName}! I gave it ${post.rating}/8 stars. "${post.review}"`;

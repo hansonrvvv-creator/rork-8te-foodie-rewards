@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { Save, User as UserIcon, Mail, Phone, Camera } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '@/contexts/UserContext';
 
 export default function EditProfileScreen() {
@@ -22,6 +23,67 @@ export default function EditProfileScreen() {
   const [phone, setPhone] = useState(user.phone);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar);
   const [isSaving, setIsSaving] = useState(false);
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please grant camera roll permissions to upload a photo.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setAvatarUrl(result.assets[0].uri);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please grant camera permissions to take a photo.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setAvatarUrl(result.assets[0].uri);
+    }
+  };
+
+  const handleChangePhoto = () => {
+    Alert.alert(
+      'Change Profile Photo',
+      'Choose an option',
+      [
+        {
+          text: 'Take Photo',
+          onPress: handleTakePhoto,
+        },
+        {
+          text: 'Choose from Library',
+          onPress: handlePickImage,
+        },
+        {
+          text: 'Enter URL',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -55,7 +117,7 @@ export default function EditProfileScreen() {
           onPress: () => router.back(),
         },
       ]);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
       setIsSaving(false);
@@ -94,7 +156,7 @@ export default function EditProfileScreen() {
               <UserIcon size={40} color="#666" />
             </View>
           )}
-          <TouchableOpacity style={styles.changePhotoButton}>
+          <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
             <Camera size={16} color="#000000" />
             <Text style={styles.changePhotoText}>Change Photo</Text>
           </TouchableOpacity>
