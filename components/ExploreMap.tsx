@@ -4,19 +4,6 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import Colors from '@/constants/colors';
 import { Restaurant } from '@/mocks/restaurants';
 
-let MapView: any;
-let Marker: any;
-let PROVIDER_DEFAULT: any;
-let PROVIDER_GOOGLE: any;
-
-if (Platform.OS !== 'web') {
-  const maps = require('react-native-maps');
-  MapView = maps.default;
-  Marker = maps.Marker;
-  PROVIDER_DEFAULT = maps.PROVIDER_DEFAULT;
-  PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
-}
-
 interface ExploreMapProps {
   restaurants: Restaurant[];
   userLocation: { latitude: number; longitude: number } | null;
@@ -36,6 +23,12 @@ function WebMapFallback() {
 
 function NativeMap({ restaurants, userLocation, onRestaurantPress }: ExploreMapProps) {
   console.log('Rendering ExploreMap with restaurants count:', restaurants.length);
+
+  const maps = require('react-native-maps');
+  const MapView = maps.default;
+  const Marker = maps.Marker;
+  const PROVIDER_DEFAULT = maps.PROVIDER_DEFAULT;
+  const PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
 
   const initialRegion = useMemo(() => {
     if (userLocation) {
