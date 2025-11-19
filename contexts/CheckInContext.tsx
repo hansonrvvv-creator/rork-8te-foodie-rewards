@@ -26,14 +26,20 @@ export const [CheckInProvider, useCheckIns] = createContextHook(() => {
     try {
       const stored = await AsyncStorage.getItem(CHECK_IN_STORAGE_KEY);
       if (stored) {
-        const parsed: CheckIn[] = JSON.parse(stored);
-        const validCheckIns = parsed.filter(
-          (ci) => Date.now() - ci.timestamp < CHECK_IN_EXPIRY_MS
-        );
-        setCheckIns(validCheckIns);
-        
-        if (validCheckIns.length !== parsed.length) {
-          await AsyncStorage.setItem(CHECK_IN_STORAGE_KEY, JSON.stringify(validCheckIns));
+        try {
+          const parsed: CheckIn[] = JSON.parse(stored);
+          const validCheckIns = parsed.filter(
+            (ci) => Date.now() - ci.timestamp < CHECK_IN_EXPIRY_MS
+          );
+          setCheckIns(validCheckIns);
+          
+          if (validCheckIns.length !== parsed.length) {
+            await AsyncStorage.setItem(CHECK_IN_STORAGE_KEY, JSON.stringify(validCheckIns));
+          }
+        } catch (parseError) {
+          console.error('Failed to parse check-ins, resetting:', parseError);
+          await AsyncStorage.removeItem(CHECK_IN_STORAGE_KEY);
+          setCheckIns([]);
         }
       }
     } catch (error) {

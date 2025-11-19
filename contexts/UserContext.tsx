@@ -45,8 +45,14 @@ export const [UserProvider, useUser] = createContextHook(() => {
     try {
       const stored = await AsyncStorage.getItem(USER_STORAGE_KEY);
       if (stored) {
-        const parsed: User = JSON.parse(stored);
-        setUser(parsed);
+        try {
+          const parsed: User = JSON.parse(stored);
+          setUser(parsed);
+        } catch (parseError) {
+          console.error('Failed to parse user data, resetting to default:', parseError);
+          await AsyncStorage.removeItem(USER_STORAGE_KEY);
+          setUser(DEFAULT_USER);
+        }
       }
     } catch (error) {
       console.error('Failed to load user data:', error);

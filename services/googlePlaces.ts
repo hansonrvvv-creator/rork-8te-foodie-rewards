@@ -145,7 +145,21 @@ export async function searchNearbyRestaurants(
     
     console.log('Fetching nearby restaurants from Google Places API');
     const response = await fetch(url);
-    const data: NearbySearchResponse = await response.json();
+    
+    if (!response.ok) {
+      console.error('Google Places API HTTP error:', response.status, response.statusText);
+      return [];
+    }
+
+    const text = await response.text();
+    
+    let data: NearbySearchResponse;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('Failed to parse Google Places API response:', text.substring(0, 200));
+      return [];
+    }
 
     if (data.status !== 'OK') {
       console.error('Google Places API error:', data.status, data.error_message);
