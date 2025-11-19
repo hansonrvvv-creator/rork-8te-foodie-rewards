@@ -1,8 +1,9 @@
-import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Search, MapPin, Navigation } from 'lucide-react-native';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions } from 'react-native';
+import { Search, MapPin, Navigation, Map as MapIcon, List as ListIcon } from 'lucide-react-native';
 import { Stack, router } from 'expo-router';
 import * as Location from 'expo-location';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
 
 import Colors from '@/constants/colors';
 import { RESTAURANTS, Restaurant } from '@/mocks/restaurants';
@@ -14,6 +15,8 @@ export default function ExploreScreen() {
   const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
     void checkLocationPermission();
@@ -85,6 +88,55 @@ export default function ExploreScreen() {
     restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const renderMap = () => {
+    if (Platform.OS === 'web') {
+      return (
+        <View style={styles.webMapContainer}>
+          <Text style={styles.webMapText}>Map view is optimized for mobile app.</Text>
+          <Text style={styles.webMapSubtext}>Please use the mobile app to view the interactive map.</Text>
+        </View>
+      );
+    }
+
+    const initialRegion = userLocation ? {
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    } : {
+      latitude: 37.78825,
+      longitude: -122.4324,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    };
+
+    return (
+      <View style={styles.mapContainer}>
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
+          initialRegion={initialRegion}
+          showsUserLocation={true}
+          showsMyLocationButton={true}
+        >
+          {filteredRestaurants.map((restaurant) => (
+            <Marker
+              key={restaurant.id}
+              coordinate={{
+                latitude: restaurant.latitude,
+                longitude: restaurant.longitude,
+              }}
+              title={restaurant.name}
+              description={restaurant.cuisine}
+              onCalloutPress={() => router.push(`/restaurant/${restaurant.id}`)}
+            />
+          ))}
+        </MapView>
+      </View>
+    );
+  };
 
   const renderRestaurant = (restaurant: Restaurant) => {
     const filledStars = Math.floor(restaurant.rating);
@@ -176,33 +228,72 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.content}
-        >
-          <View style={styles.headerRow}>
-            <Text style={styles.sectionTitle}>
-              {searchQuery ? 'Search Results' : hasLocationPermission ? 'Near You' : 'Restaurants'}
-            </Text>
-            {hasLocationPermission && userLocation && (
-              <Text style={styles.locationText}>
-                📍 Using your location
-              </Text>
+        {viewMode === 'list' ? (
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.content}
+          >
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.sectionTitle}>
+                  {searchQuery ? 'Search Results' : hasLocationPermission ? 'Near You' : 'Restaurants'}
+                </Text>
+                {hasLocationPermission && userLocation && (
+                  <Text style={styles.locationText}>
+                    📍 Using your location
+                  </Text>
+                )}
+              </View>
+              
+              <View style={styles.viewToggle}>
+                <TouchableOpacity 
+                  style={[styles.toggleButton, styles.toggleButtonActive]}
+                  onPress={() => setViewMode('list')}
+                >
+                  <ListIcon size={20} color={'#FFF'} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.toggleButton]}
+                  onPress={() => setViewMode('map')}
+                >
+                  <MapIcon size={20} color={Colors.light.text} />
+                </TouchableOpacity>
+              </View>
+            </View>
+            {!hasLocationPermission && (
+              <TouchableOpacity
+                style={styles.permissionBanner}
+                onPress={requestLocationPermission}
+              >
+                <Navigation size={20} color={Colors.light.primary} />
+                <Text style={styles.permissionText}>
+                  Enable location to find restaurants near you
+                </Text>
+              </TouchableOpacity>
             )}
+            {filteredRestaurants.map(renderRestaurant)}
+          </ScrollView>
+        ) : (
+          <View style={{ flex: 1 }}>
+             <View style={styles.mapHeaderOverlay}>
+                <View style={styles.viewToggle}>
+                  <TouchableOpacity 
+                    style={[styles.toggleButton]}
+                    onPress={() => setViewMode('list')}
+                  >
+                    <ListIcon size={20} color={Colors.light.text} />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.toggleButton, styles.toggleButtonActive]}
+                    onPress={() => setViewMode('map')}
+                  >
+                    <MapIcon size={20} color={'#FFF'} />
+                  </TouchableOpacity>
+                </View>
+             </View>
+             {renderMap()}
           </View>
-          {!hasLocationPermission && (
-            <TouchableOpacity
-              style={styles.permissionBanner}
-              onPress={requestLocationPermission}
-            >
-              <Navigation size={20} color={Colors.light.primary} />
-              <Text style={styles.permissionText}>
-                Enable location to find restaurants near you
-              </Text>
-            </TouchableOpacity>
-          )}
-          {filteredRestaurants.map(renderRestaurant)}
-        </ScrollView>
+        )}
       </View>
     </>
   );
@@ -362,5 +453,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.light.text,
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+  },
+  toggleButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  toggleButtonActive: {
+    backgroundColor: Colors.light.primary,
+  },
+  mapContainer: {
+    flex: 1,
+    backgroundColor: Colors.light.backgroundSecondary,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapHeaderOverlay: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 100,
+  },
+  webMapContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.light.backgroundSecondary,
+    padding: 20,
+  },
+  webMapText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  webMapSubtext: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
   },
 });
