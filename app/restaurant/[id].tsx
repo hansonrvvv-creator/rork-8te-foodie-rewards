@@ -1,4 +1,4 @@
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Linking, Platform } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { MapPin, Star, DollarSign, Heart, Share2, Phone, Navigation, Lock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -61,6 +61,21 @@ export default function RestaurantDetailScreen() {
       </>
     );
   }
+
+  const openMaps = () => {
+    const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+    const latLng = `${restaurant.latitude},${restaurant.longitude}`;
+    const label = restaurant.name;
+    const url = Platform.select({
+      ios: `${scheme}${label}@${latLng}`,
+      android: `${scheme}${latLng}(${label})`,
+      web: `https://www.google.com/maps/search/?api=1&query=${latLng}`
+    });
+
+    if (url) {
+      Linking.openURL(url);
+    }
+  };
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -160,10 +175,10 @@ export default function RestaurantDetailScreen() {
               <DollarSign size={16} color={Colors.light.textSecondary} />
               <Text style={styles.detailText}>{restaurant.priceRange}</Text>
             </View>
-            <View style={styles.detailItem}>
+            <TouchableOpacity style={styles.detailItem} onPress={openMaps} testID="restaurant-directions-button">
               <Navigation size={16} color={Colors.light.textSecondary} />
               <Text style={styles.detailText}>{restaurant.distance}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.actionButtons}>

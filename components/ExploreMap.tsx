@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import Colors from '@/constants/colors';
 import { Restaurant } from '@/mocks/restaurants';
@@ -10,25 +11,8 @@ interface ExploreMapProps {
   onRestaurantPress: (id: string) => void;
 }
 
-function WebMapFallback() {
-  console.log('Rendering ExploreMap web fallback');
-  
-  return (
-    <View style={styles.webMapContainer} testID="explore-map-web-fallback">
-      <Text style={styles.webMapText}>Map view is optimized for the mobile app.</Text>
-      <Text style={styles.webMapSubtext}>Use the mobile app to explore restaurants on a map.</Text>
-    </View>
-  );
-}
-
-function NativeMap({ restaurants, userLocation, onRestaurantPress }: ExploreMapProps) {
+export default function ExploreMap({ restaurants, userLocation, onRestaurantPress }: ExploreMapProps) {
   console.log('Rendering ExploreMap with restaurants count:', restaurants.length);
-
-  const maps = require('react-native-maps');
-  const MapView = maps.default;
-  const Marker = maps.Marker;
-  const PROVIDER_DEFAULT = maps.PROVIDER_DEFAULT;
-  const PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
 
   const initialRegion = useMemo(() => {
     if (userLocation) {
@@ -74,14 +58,6 @@ function NativeMap({ restaurants, userLocation, onRestaurantPress }: ExploreMapP
   );
 }
 
-export default function ExploreMap(props: ExploreMapProps) {
-  if (Platform.OS === 'web') {
-    return <WebMapFallback />;
-  }
-
-  return <NativeMap {...props} />;
-}
-
 const styles = StyleSheet.create({
   mapContainer: {
     flex: 1,
@@ -90,24 +66,5 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '100%',
-  },
-  webMapContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.light.backgroundSecondary,
-    padding: 24,
-  },
-  webMapText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.light.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  webMapSubtext: {
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
   },
 });

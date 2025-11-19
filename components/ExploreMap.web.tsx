@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native';
-
 import Colors from '@/constants/colors';
 import { Restaurant } from '@/mocks/restaurants';
 
@@ -9,9 +8,7 @@ interface ExploreMapProps {
   onRestaurantPress: (id: string) => void;
 }
 
-export default function ExploreMap(_: ExploreMapProps) {
-  console.log('Rendering ExploreMap web fallback');
-
+export default function ExploreMap(props: ExploreMapProps) {
   return (
     <View style={styles.webMapContainer} testID="explore-map-web-fallback">
       <Text style={styles.webMapText}>Map view is optimized for the mobile app.</Text>
