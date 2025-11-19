@@ -22,24 +22,34 @@ export default function ExploreScreen() {
 
   const containerStyle = useMemo(() => [styles.container, { paddingTop: insets.top }], [insets.top]);
 
-  const fetchNearbyRestaurants = useCallback(async () => {
+  const fetchNearbyRestaurants = useCallback(async (keyword?: string) => {
     setIsLoadingLocation(true);
     try {
-      console.log('Getting current location...');
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      let latitude, longitude;
+
+      if (userLocation) {
+        latitude = userLocation.latitude;
+        longitude = userLocation.longitude;
+      } else {
+        console.log('Getting current location...');
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        latitude = location.coords.latitude;
+        longitude = location.coords.longitude;
+        console.log('User location:', latitude, longitude);
+        setUserLocation({ latitude, longitude });
+      }
       
-      const { latitude, longitude } = location.coords;
-      console.log('User location:', latitude, longitude);
-      setUserLocation({ latitude, longitude });
-      
-      const nearbyRestaurants = await searchNearbyRestaurants(latitude, longitude);
+      const nearbyRestaurants = await searchNearbyRestaurants(latitude, longitude, 5000, keyword);
       
       if (nearbyRestaurants.length > 0) {
         setRestaurants(nearbyRestaurants);
       } else {
         console.log('No nearby restaurants found, using mock data');
+        if (keyword) {
+           Alert.alert('No Results', `No restaurants found for "${keyword}" nearby.`);
+        }
       }
     } catch (error) {
       console.error('Error fetching nearby restaurants:', error);
@@ -50,7 +60,7 @@ export default function ExploreScreen() {
     } finally {
       setIsLoadingLocation(false);
     }
-  }, []);
+  }, [userLocation]);
 
 
 
@@ -185,6 +195,8 @@ export default function ExploreScreen() {
               placeholderTextColor={Colors.light.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              onSubmitEditing={() => fetchNearbyRestaurants(searchQuery)}
+              returnKeyType="search"
             />
             {!hasLocationPermission ? (
               <TouchableOpacity
@@ -197,7 +209,7 @@ export default function ExploreScreen() {
               <ActivityIndicator size="small" color={Colors.light.primary} />
             ) : (
               <TouchableOpacity
-                onPress={fetchNearbyRestaurants}
+                onPress={() => fetchNearbyRestaurants(searchQuery)}
                 style={styles.locationButton}
               >
                 <Navigation size={20} color={Colors.light.primary} />

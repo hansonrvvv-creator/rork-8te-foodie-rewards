@@ -133,7 +133,8 @@ function convertToRestaurant(
 export async function searchNearbyRestaurants(
   latitude: number,
   longitude: number,
-  radius: number = 5000
+  radius: number = 5000,
+  keyword?: string
 ): Promise<Restaurant[]> {
   if (!GOOGLE_PLACES_API_KEY) {
     console.warn('Google Places API key not found. Using mock data.');
@@ -141,8 +142,12 @@ export async function searchNearbyRestaurants(
   }
 
   try {
-    const url = `${GOOGLE_PLACES_API.NEARBY_SEARCH}?location=${latitude},${longitude}&radius=${radius}&type=restaurant&key=${GOOGLE_PLACES_API_KEY}`;
+    let url = `${GOOGLE_PLACES_API.NEARBY_SEARCH}?location=${latitude},${longitude}&radius=${radius}&type=restaurant&key=${GOOGLE_PLACES_API_KEY}`;
     
+    if (keyword) {
+      url += `&keyword=${encodeURIComponent(keyword)}`;
+    }
+
     console.log('Fetching nearby restaurants from Google Places API');
     const response = await fetch(url);
     
