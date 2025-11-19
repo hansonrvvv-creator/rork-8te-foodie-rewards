@@ -15,6 +15,16 @@ export interface User {
   totalReviews: number;
   memberSince: string;
   friendIds: string[];
+  facebookId?: string;
+  facebookAccessToken?: string;
+  facebookFriends?: FacebookFriend[];
+}
+
+export interface FacebookFriend {
+  id: string;
+  name: string;
+  picture?: string;
+  isAppUser?: boolean;
 }
 
 const USER_STORAGE_KEY = '@user_data';
@@ -93,6 +103,22 @@ export const [UserProvider, useUser] = createContextHook(() => {
     }
   }, []);
 
+  const linkFacebook = useCallback(async (facebookId: string, accessToken: string, facebookFriends: FacebookFriend[]) => {
+    await updateUser({ 
+      facebookId, 
+      facebookAccessToken: accessToken,
+      facebookFriends 
+    });
+  }, [updateUser]);
+
+  const unlinkFacebook = useCallback(async () => {
+    await updateUser({ 
+      facebookId: undefined, 
+      facebookAccessToken: undefined,
+      facebookFriends: undefined 
+    });
+  }, [updateUser]);
+
   return useMemo(() => ({
     user,
     isLoaded,
@@ -100,5 +126,7 @@ export const [UserProvider, useUser] = createContextHook(() => {
     addPoints,
     addReview,
     clearUser,
-  }), [user, isLoaded, updateUser, addPoints, addReview, clearUser]);
+    linkFacebook,
+    unlinkFacebook,
+  }), [user, isLoaded, updateUser, addPoints, addReview, clearUser, linkFacebook, unlinkFacebook]);
 });

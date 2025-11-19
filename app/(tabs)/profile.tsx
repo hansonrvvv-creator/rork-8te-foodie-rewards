@@ -57,7 +57,10 @@ export default function ProfileScreen() {
             {user.email && user.email.length > 0 && (
               <Text style={styles.email}>{user.email}</Text>
             )}
-            <TouchableOpacity style={styles.addFriendsButton}>
+            <TouchableOpacity 
+              style={styles.addFriendsButton}
+              onPress={() => router.push('/friends')}
+            >
               <UserPlus size={18} color="#FFFFFF" />
               <Text style={styles.addFriendsText}>Add Friends</Text>
             </TouchableOpacity>

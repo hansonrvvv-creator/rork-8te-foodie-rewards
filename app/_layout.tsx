@@ -18,6 +18,7 @@ function RootLayoutNav() {
       <Stack.Screen name="restaurant" options={{ headerShown: false }} />
       <Stack.Screen name="all-tiers" options={{ headerShown: true }} />
       <Stack.Screen name="edit-profile" options={{ headerShown: true }} />
+      <Stack.Screen name="friends" options={{ headerShown: true }} />
       <Stack.Screen
         name="checkin-success"
         options={{ headerShown: false, presentation: "modal" }}
