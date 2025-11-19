@@ -66,7 +66,9 @@ export default function RestaurantDetailScreen() {
     return (
       <View key={review.id} style={styles.reviewCard}>
         <View style={styles.reviewHeader}>
-          <Image source={{ uri: review.userAvatar }} style={styles.reviewAvatar} />
+          {review.userAvatar && review.userAvatar.length > 0 && (
+            <Image source={{ uri: review.userAvatar }} style={styles.reviewAvatar} />
+          )}
           <View style={styles.reviewUserInfo}>
             <View style={styles.reviewNameRow}>
               <Text style={styles.reviewUserName}>{review.userName}</Text>
@@ -84,7 +86,7 @@ export default function RestaurantDetailScreen() {
           </View>
         </View>
         
-        {review.images.length > 0 && (
+        {review.images.length > 0 && review.images[0] && review.images[0].length > 0 && (
           <Image source={{ uri: review.images[0] }} style={styles.reviewImage} />
         )}
         

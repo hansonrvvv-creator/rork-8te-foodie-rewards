@@ -51,7 +51,9 @@ export default function FeedScreen() {
       <View key={post.id} style={styles.postCard}>
         <View style={styles.postHeader}>
           <View style={styles.userInfo}>
-            <Image source={{ uri: post.userAvatar }} style={styles.avatar} />
+            {post.userAvatar && post.userAvatar.length > 0 && (
+              <Image source={{ uri: post.userAvatar }} style={styles.avatar} />
+            )}
             <View style={styles.userDetails}>
               <View style={styles.nameRow}>
                 <Text style={styles.userName}>{post.userName}</Text>
@@ -78,11 +80,13 @@ export default function FeedScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
-          onPress={() => router.push(`/restaurant/${post.restaurantId}`)}
-        >
-          <Image source={{ uri: post.image }} style={styles.postImage} />
-        </TouchableOpacity>
+        {post.image && post.image.length > 0 && (
+          <TouchableOpacity
+            onPress={() => router.push(`/restaurant/${post.restaurantId}`)}
+          >
+            <Image source={{ uri: post.image }} style={styles.postImage} />
+          </TouchableOpacity>
+        )}
 
         <View style={styles.postContent}>
           <View style={styles.ratingRow}>{renderStars(post.rating)}</View>

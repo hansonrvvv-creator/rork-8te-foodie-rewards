@@ -44,7 +44,9 @@ export default function ProfileScreen() {
           />
           
           <View style={styles.userInfo}>
-            <Image source={{ uri: CURRENT_USER.avatar }} style={styles.avatar} />
+            {CURRENT_USER.avatar && CURRENT_USER.avatar.length > 0 && (
+              <Image source={{ uri: CURRENT_USER.avatar }} style={styles.avatar} />
+            )}
             <Text style={styles.name}>{CURRENT_USER.name}</Text>
             <TouchableOpacity style={styles.addFriendsButton}>
               <UserPlus size={18} color="#FFFFFF" />
