@@ -23,12 +23,12 @@ export default function ExploreScreen() {
 
   const containerStyle = useMemo(() => [styles.container, { paddingTop: insets.top }], [insets.top]);
 
-  const fetchNearbyRestaurants = useCallback(async (keyword?: string) => {
+  const fetchNearbyRestaurants = useCallback(async (keyword?: string, forceRefreshLocation?: boolean) => {
     setIsLoadingLocation(true);
     try {
       let latitude, longitude;
 
-      if (userLocation) {
+      if (userLocation && !forceRefreshLocation) {
         latitude = userLocation.latitude;
         longitude = userLocation.longitude;
       } else {
@@ -219,7 +219,7 @@ export default function ExploreScreen() {
               <ActivityIndicator size="small" color={Colors.light.primary} />
             ) : (
               <TouchableOpacity
-                onPress={() => fetchNearbyRestaurants(searchQuery)}
+                onPress={() => fetchNearbyRestaurants(searchQuery, true)}
                 style={styles.locationButton}
               >
                 <Navigation size={20} color={Colors.light.primary} />

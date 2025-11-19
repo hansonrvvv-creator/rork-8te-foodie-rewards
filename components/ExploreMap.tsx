@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 import Colors from '@/constants/colors';
 import { Restaurant } from '@/mocks/restaurants';
@@ -13,6 +13,7 @@ interface ExploreMapProps {
 
 export default function ExploreMap({ restaurants, userLocation, onRestaurantPress }: ExploreMapProps) {
   console.log('Rendering ExploreMap with restaurants count:', restaurants.length);
+  const mapRef = useRef<MapView>(null);
 
   const initialRegion = useMemo(() => {
     if (userLocation) {
@@ -32,9 +33,22 @@ export default function ExploreMap({ restaurants, userLocation, onRestaurantPres
     };
   }, [userLocation]);
 
+  useEffect(() => {
+    if (userLocation && mapRef.current) {
+      const region: Region = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      mapRef.current.animateToRegion(region, 1000);
+    }
+  }, [userLocation]);
+
   return (
     <View style={styles.mapContainer} testID="explore-map-container">
       <MapView
+        ref={mapRef}
         style={styles.map}
         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
         initialRegion={initialRegion}
