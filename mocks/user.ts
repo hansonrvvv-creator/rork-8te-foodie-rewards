@@ -9,6 +9,7 @@ export interface User {
   totalCheckins: number;
   totalReviews: number;
   memberSince: string;
+  friendIds: string[];
 }
 
 export const CURRENT_USER: User = {
@@ -20,4 +21,5 @@ export const CURRENT_USER: User = {
   totalCheckins: 42,
   totalReviews: 38,
   memberSince: 'January 2024',
+  friendIds: ['u1', 'u2', 'u5'],
 };

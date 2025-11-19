@@ -4,10 +4,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
 
 import Colors from '@/constants/colors';
-import { POSTS, Post } from '@/mocks/posts';
+import { Post, getVisiblePosts } from '@/mocks/posts';
 import { TIERS } from '@/mocks/tiers';
+import { CURRENT_USER } from '@/mocks/user';
 
 export default function FeedScreen() {
+  const visiblePosts = getVisiblePosts(CURRENT_USER.id, CURRENT_USER.friendIds);
+
   const handleShareToFacebook = async (post: Post) => {
     const message = `Check out my review of ${post.restaurantName}! I gave it ${post.rating}/8 stars. "${post.review}"`;
     const url = `https://8te.app/restaurant/${post.restaurantId}`;
@@ -138,7 +141,7 @@ export default function FeedScreen() {
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {POSTS.map(renderPost)}
+        {visiblePosts.map(renderPost)}
       </ScrollView>
     </>
   );

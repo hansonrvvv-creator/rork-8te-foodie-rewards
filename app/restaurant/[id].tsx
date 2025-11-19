@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import Colors from '@/constants/colors';
 import { RESTAURANTS } from '@/mocks/restaurants';
-import { getRestaurantReviews, Review } from '@/mocks/posts';
+import { getRestaurantReviews, Review, PostVisibility } from '@/mocks/posts';
 import { TIERS } from '@/mocks/tiers';
 import { useCheckIns } from '@/contexts/CheckInContext';
 import ReviewModal from '@/components/ReviewModal';
@@ -32,9 +32,19 @@ export default function RestaurantDetailScreen() {
     setReviewModalVisible(true);
   };
 
-  const handleSubmitReview = async (rating: number, reviewText: string) => {
-    console.log('Submitting review:', { rating, reviewText, restaurantId: id });
-    Alert.alert('Review Submitted', 'Thank you for your review!');
+  const handleSubmitReview = async (rating: number, reviewText: string, visibility: PostVisibility) => {
+    console.log('Submitting review:', { rating, reviewText, visibility, restaurantId: id });
+    
+    const visibilityText = visibility === 'private' 
+      ? 'Only you can see this review.' 
+      : visibility === 'friends' 
+      ? 'Your friends can see this review.' 
+      : 'Everyone can see this review.';
+    
+    Alert.alert(
+      'Review Submitted', 
+      `Thank you for your review! ${visibilityText}`
+    );
   };
 
   if (!restaurant) {

@@ -1,5 +1,7 @@
 import { TierLevel } from './tiers';
 
+export type PostVisibility = 'private' | 'friends' | 'public';
+
 export interface Post {
   id: string;
   userId: string;
@@ -16,6 +18,7 @@ export interface Post {
   timestamp: string;
   likes: number;
   isLiked: boolean;
+  visibility: PostVisibility;
 }
 
 export const POSTS: Post[] = [
@@ -35,6 +38,7 @@ export const POSTS: Post[] = [
     timestamp: '2h ago',
     likes: 142,
     isLiked: true,
+    visibility: 'public',
   },
   {
     id: '2',
@@ -52,6 +56,7 @@ export const POSTS: Post[] = [
     timestamp: '5h ago',
     likes: 89,
     isLiked: false,
+    visibility: 'friends',
   },
   {
     id: '3',
@@ -69,6 +74,7 @@ export const POSTS: Post[] = [
     timestamp: '1d ago',
     likes: 234,
     isLiked: true,
+    visibility: 'public',
   },
   {
     id: '4',
@@ -86,6 +92,7 @@ export const POSTS: Post[] = [
     timestamp: '1d ago',
     likes: 156,
     isLiked: false,
+    visibility: 'private',
   },
   {
     id: '5',
@@ -103,6 +110,7 @@ export const POSTS: Post[] = [
     timestamp: '2d ago',
     likes: 198,
     isLiked: true,
+    visibility: 'friends',
   },
   {
     id: '6',
@@ -120,8 +128,27 @@ export const POSTS: Post[] = [
     timestamp: '3d ago',
     likes: 87,
     isLiked: false,
+    visibility: 'public',
   },
 ];
+
+export function getVisiblePosts(currentUserId: string, friendIds: string[]): Post[] {
+  return POSTS.filter(post => {
+    if (post.userId === currentUserId) {
+      return true;
+    }
+    
+    if (post.visibility === 'public') {
+      return true;
+    }
+    
+    if (post.visibility === 'friends' && friendIds.includes(post.userId)) {
+      return true;
+    }
+    
+    return false;
+  });
+}
 
 export interface Review {
   id: string;

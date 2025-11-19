@@ -9,16 +9,17 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { X, Star } from 'lucide-react-native';
+import { X, Star, Lock, Users, Globe } from 'lucide-react-native';
 import { useState } from 'react';
 
 import Colors from '@/constants/colors';
+import { PostVisibility } from '@/mocks/posts';
 
 interface ReviewModalProps {
   visible: boolean;
   restaurantName: string;
   onClose: () => void;
-  onSubmit: (rating: number, review: string) => void;
+  onSubmit: (rating: number, review: string, visibility: PostVisibility) => void;
 }
 
 export default function ReviewModal({
@@ -29,6 +30,7 @@ export default function ReviewModal({
 }: ReviewModalProps) {
   const [rating, setRating] = useState<number>(0);
   const [review, setReview] = useState<string>('');
+  const [visibility, setVisibility] = useState<PostVisibility>('friends');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSubmit = async () => {
@@ -38,9 +40,10 @@ export default function ReviewModal({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(rating, review);
+      await onSubmit(rating, review, visibility);
       setRating(0);
       setReview('');
+      setVisibility('friends');
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -50,8 +53,15 @@ export default function ReviewModal({
   const handleClose = () => {
     setRating(0);
     setReview('');
+    setVisibility('friends');
     onClose();
   };
+
+  const visibilityOptions: { value: PostVisibility; label: string; icon: typeof Lock }[] = [
+    { value: 'private', label: 'Private', icon: Lock },
+    { value: 'friends', label: 'Friends Only', icon: Users },
+    { value: 'public', label: 'Public', icon: Globe },
+  ];
 
   return (
     <Modal
@@ -104,6 +114,37 @@ export default function ReviewModal({
               numberOfLines={6}
               textAlignVertical="top"
             />
+
+            <Text style={styles.label}>Who can see this?</Text>
+            <View style={styles.visibilityContainer}>
+              {visibilityOptions.map((option) => {
+                const Icon = option.icon;
+                const isSelected = visibility === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.visibilityOption,
+                      isSelected && styles.visibilityOptionSelected,
+                    ]}
+                    onPress={() => setVisibility(option.value)}
+                  >
+                    <Icon
+                      size={20}
+                      color={isSelected ? Colors.light.primary : Colors.light.textSecondary}
+                    />
+                    <Text
+                      style={[
+                        styles.visibilityText,
+                        isSelected && styles.visibilityTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             <TouchableOpacity
               style={[
@@ -201,5 +242,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  visibilityContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  visibilityOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.light.border,
+    backgroundColor: Colors.light.card,
+  },
+  visibilityOptionSelected: {
+    borderColor: Colors.light.primary,
+    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+  },
+  visibilityText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.light.textSecondary,
+  },
+  visibilityTextSelected: {
+    color: Colors.light.primary,
   },
 });
