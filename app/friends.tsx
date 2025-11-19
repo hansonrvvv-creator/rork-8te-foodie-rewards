@@ -18,7 +18,12 @@ import { useUser, FacebookFriend } from '@/contexts/UserContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const FACEBOOK_APP_ID = '1234567890';
+// TODO: Replace with your actual Facebook App ID from https://developers.facebook.com/
+// 1. Go to https://developers.facebook.com/apps/
+// 2. Create a new app or select existing app
+// 3. Copy the App ID from the dashboard
+// 4. Add OAuth redirect URI: rork-app://friends
+const FACEBOOK_APP_ID = '1234567890'; // ⚠️ REPLACE THIS
 
 const discovery = {
   authorizationEndpoint: 'https://www.facebook.com/v18.0/dialog/oauth',
