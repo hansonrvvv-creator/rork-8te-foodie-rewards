@@ -172,11 +172,19 @@ export default function ExploreScreen() {
           
           <View style={styles.ratingRow}>
             <View style={styles.stars}>
-              {[...Array(8)].map((_, i) => (
-                <Text key={i} style={styles.starIcon}>
-                  {i < filledStars ? '⭐' : i === filledStars && hasHalfStar ? '⭐' : '☆'}
-                </Text>
-              ))}
+              {[...Array(5)].map((_, i) => {
+                let starIcon = '☆';
+                if (i < filledStars) {
+                  starIcon = '⭐';
+                } else if (i === filledStars && hasHalfStar) {
+                  starIcon = '⭐';
+                }
+                return (
+                  <Text key={i} style={styles.starIcon}>
+                    {starIcon}
+                  </Text>
+                );
+              })}
             </View>
             <Text style={styles.ratingText}>
               {restaurant.rating.toFixed(1)} ({restaurant.reviewCount})
