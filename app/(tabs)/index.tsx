@@ -199,7 +199,9 @@ export default function FeedScreen() {
                   <Image source={{ uri: post.userAvatar }} style={styles.postAvatar} />
                   <View style={styles.postHeaderText}>
                     <Text style={styles.postUserName}>{post.userName}</Text>
-                    <Text style={styles.postRestaurantName}>{post.restaurantName}</Text>
+                    <TouchableOpacity onPress={() => router.push(`/restaurant/${post.restaurantId}`)}>
+                      <Text style={styles.postRestaurantName}>{post.restaurantName}</Text>
+                    </TouchableOpacity>
                   </View>
                   <View style={styles.postRatingBadge}>
                     <Star size={14} color={Colors.light.primary} fill={Colors.light.primary} />
@@ -413,7 +415,8 @@ const styles = StyleSheet.create({
   },
   postRestaurantName: {
     fontSize: 14,
-    color: Colors.light.textSecondary,
+    color: Colors.light.primary,
+    textDecorationLine: 'underline' as const,
   },
   postRatingBadge: {
     flexDirection: 'row',
