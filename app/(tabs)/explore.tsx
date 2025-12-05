@@ -163,7 +163,7 @@ export default function ExploreScreen() {
           
           <View style={styles.cuisineRow}>
             <Text style={styles.cuisine}>{restaurant.cuisine}</Text>
-            <Text style={styles.dot}>•</Text>
+            <Text style={styles.dot}> • </Text>
             <View style={styles.locationRow}>
               <MapPin size={12} color={Colors.light.textSecondary} />
               <Text style={styles.distance}>{restaurant.distance}</Text>
