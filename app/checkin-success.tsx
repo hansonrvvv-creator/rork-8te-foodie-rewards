@@ -41,7 +41,7 @@ export default function CheckinSuccessScreen() {
             </View>
 
             <Text style={styles.message}>
-              Don&apos;t forget to leave a review and share your experience!
+              Don't forget to leave a review and share your experience!
             </Text>
 
             <TouchableOpacity
