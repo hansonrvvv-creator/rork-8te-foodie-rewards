@@ -9,7 +9,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Post } from '@/mocks/posts';
 
 export default function FeedScreen() {
-  const { user, isLoaded, addReview } = useUser();
+  const { user, isLoaded, addReview, addPoints } = useUser();
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -87,7 +87,7 @@ export default function FeedScreen() {
       image: newPost.image,
       rating: newPost.rating,
       review: newPost.review,
-      pointsEarned: newPost.rating * 3,
+      pointsEarned: 10,
       timestamp: 'Just now',
       likes: 0,
       isLiked: false,
@@ -96,6 +96,7 @@ export default function FeedScreen() {
 
     setPosts([post, ...posts]);
     await addReview();
+    await addPoints(10);
     
     setNewPost({
       image: '',
@@ -108,7 +109,7 @@ export default function FeedScreen() {
     setUploading(false);
     setShowUploadModal(false);
     
-    Alert.alert('Success! 🎉', `Your post has been uploaded and you earned ${post.pointsEarned} points!`);
+    Alert.alert('Success! 🎉', 'Your post has been uploaded and you earned 10 points!');
   };
 
   const renderStars = (rating: number) => {

@@ -11,12 +11,12 @@ import { useUser } from '@/contexts/UserContext';
 export default function CheckinSuccessScreen() {
   const { restaurantId } = useLocalSearchParams();
   const restaurant = RESTAURANTS.find((r) => r.id === restaurantId) || RESTAURANTS[0];
-  const pointsEarned = 25;
+  const pointsEarned = 100;
   const { addPoints } = useUser();
 
   useEffect(() => {
     addPoints(pointsEarned);
-  }, []);
+  }, [addPoints, pointsEarned]);
 
   return (
     <>
