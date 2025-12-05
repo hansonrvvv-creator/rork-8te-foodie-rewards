@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import Colors from '@/constants/colors';
 import { useUser } from '@/contexts/UserContext';
-import { Post, POSTS } from '@/mocks/posts';
+import { Post } from '@/mocks/posts';
 
 export default function FeedScreen() {
   const { user, isLoaded, addReview } = useUser();
@@ -23,9 +23,7 @@ export default function FeedScreen() {
     review: '',
   });
 
-  useEffect(() => {
-    setPosts(POSTS);
-  }, []);
+
 
   useEffect(() => {
     if (isLoaded && !hasShownWelcome && (!user.name || !user.email)) {
