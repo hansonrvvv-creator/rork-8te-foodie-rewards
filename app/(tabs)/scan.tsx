@@ -101,7 +101,7 @@ export default function ScanScreen() {
       const restaurant = RESTAURANTS.find((r) => r.id === restaurantId);
 
       if (!restaurant) {
-        Alert.alert('Invalid QR Code', 'This QR code is not valid for any restaurant.');
+        Alert.alert('Invalid QR Code', 'This QR code is not valid for any restaurant.', [{ text: 'OK' }]);
         setCooldown(true);
         setTimeout(() => {
           setCooldown(false);

@@ -86,7 +86,7 @@ export default function RestaurantDetailScreen() {
         </Text>
       );
     }
-    return stars;
+    return <>{stars}</>;
   };
 
   const renderReview = (review: Review) => {
