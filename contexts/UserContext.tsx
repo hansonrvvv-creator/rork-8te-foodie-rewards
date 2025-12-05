@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
-import { TierLevel } from '@/mocks/tiers';
+import { TierLevel, getTierByPoints } from '@/mocks/tiers';
 
 export interface User {
   id: string;
@@ -83,11 +83,20 @@ export const [UserProvider, useUser] = createContextHook(() => {
     }
   }, [user]);
 
-  const addPoints = useCallback(async (points: number) => {
-    await updateUser({ 
-      points: user.points + points,
-      totalCheckins: user.totalCheckins + 1 
-    });
+  const addPoints = useCallback(async (points: number, incrementCheckIns: boolean = false) => {
+    const newPoints = user.points + points;
+    const newTier = getTierByPoints(newPoints);
+    
+    const updates: Partial<User> = {
+      points: newPoints,
+      tier: newTier.id,
+    };
+    
+    if (incrementCheckIns) {
+      updates.totalCheckins = user.totalCheckins + 1;
+    }
+    
+    await updateUser(updates);
   }, [user, updateUser]);
 
   const addReview = useCallback(async () => {

@@ -23,7 +23,7 @@ export const TIERS: Record<TierLevel, Tier> = {
   bronze: {
     id: 'bronze',
     name: 'Bronze',
-    minPoints: 100,
+    minPoints: 150,
     color: '#CD7F32',
     gradient: ['#E6A85C', '#CD7F32'],
     icon: '🥉',
@@ -32,7 +32,7 @@ export const TIERS: Record<TierLevel, Tier> = {
   silver: {
     id: 'silver',
     name: 'Silver',
-    minPoints: 250,
+    minPoints: 300,
     color: '#C0C0C0',
     gradient: ['#E8E8E8', '#C0C0C0'],
     icon: '🥈',
@@ -41,7 +41,7 @@ export const TIERS: Record<TierLevel, Tier> = {
   gold: {
     id: 'gold',
     name: 'Gold',
-    minPoints: 500,
+    minPoints: 450,
     color: '#FFD700',
     gradient: ['#FFE55C', '#FFD700'],
     icon: '🥇',
@@ -50,7 +50,7 @@ export const TIERS: Record<TierLevel, Tier> = {
   platinum: {
     id: 'platinum',
     name: 'Platinum',
-    minPoints: 1000,
+    minPoints: 600,
     color: '#E5E4E2',
     gradient: ['#F5F5F5', '#E5E4E2'],
     icon: '💎',
@@ -59,7 +59,7 @@ export const TIERS: Record<TierLevel, Tier> = {
   diamond: {
     id: 'diamond',
     name: 'Diamond',
-    minPoints: 2000,
+    minPoints: 750,
     color: '#B9F2FF',
     gradient: ['#E0F7FF', '#B9F2FF'],
     icon: '💠',
@@ -68,7 +68,7 @@ export const TIERS: Record<TierLevel, Tier> = {
   elite: {
     id: 'elite',
     name: 'Elite',
-    minPoints: 5000,
+    minPoints: 900,
     color: '#9C27B0',
     gradient: ['#BA68C8', '#9C27B0'],
     icon: '👑',
@@ -77,7 +77,7 @@ export const TIERS: Record<TierLevel, Tier> = {
   legend: {
     id: 'legend',
     name: 'Legend',
-    minPoints: 10000,
+    minPoints: 1050,
     color: '#FF6B35',
     gradient: ['#FF8A5B', '#FF6B35'],
     icon: '⭐',

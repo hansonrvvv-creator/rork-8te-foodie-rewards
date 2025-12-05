@@ -15,7 +15,7 @@ export default function CheckinSuccessScreen() {
   const { addPoints } = useUser();
 
   useEffect(() => {
-    addPoints(pointsEarned);
+    addPoints(pointsEarned, true);
   }, [addPoints, pointsEarned]);
 
   return (
