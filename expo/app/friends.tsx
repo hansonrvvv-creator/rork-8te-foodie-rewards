@@ -56,9 +56,10 @@ export default function FriendsScreen() {
       }
     };
     handleResponse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
-  const handleFacebookAuth = async (code: string) => {
+  const handleFacebookAuth = async (_code: string) => {
     setIsLoading(true);
     try {
       const mockFriends: FacebookFriend[] = [
@@ -142,11 +143,11 @@ export default function FriendsScreen() {
     );
   };
 
-  const addFriend = (friendId: string) => {
+  const addFriend = (_friendId: string) => {
     Alert.alert('Friend Added', 'You can now see their check-ins and activity!');
   };
 
-  const inviteFriend = (friendId: string) => {
+  const inviteFriend = (_friendId: string) => {
     Alert.alert('Invitation Sent', 'Your friend will receive an invite to join the app!');
   };
 

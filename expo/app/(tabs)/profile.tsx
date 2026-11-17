@@ -50,13 +50,13 @@ export default function ProfileScreen() {
           />
           
           <View style={styles.userInfo}>
-            {user.avatar && user.avatar.length > 0 && (
+            {user.avatar && user.avatar.length > 0 ? (
               <Image source={{ uri: user.avatar }} style={styles.avatar} />
-            )}
+            ) : null}
             <Text style={styles.name}>{user.name || 'Guest User'}</Text>
-            {user.email && user.email.length > 0 && (
+            {user.email && user.email.length > 0 ? (
               <Text style={styles.email}>{user.email}</Text>
-            )}
+            ) : null}
             <TouchableOpacity 
               style={styles.addFriendsButton}
               onPress={() => router.push('/friends')}

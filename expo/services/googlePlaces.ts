@@ -161,7 +161,7 @@ export async function searchNearbyRestaurants(
     let data: NearbySearchResponse;
     try {
       data = JSON.parse(text);
-    } catch (parseError) {
+    } catch {
       console.error('Failed to parse Google Places API response:', text.substring(0, 200));
       return [];
     }
